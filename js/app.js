@@ -68,7 +68,7 @@ function openDoc(id) {
   document.getElementById("reader-title").textContent = doc.title;
   document.getElementById("reader-goal").textContent = doc.goal || "";
   document.getElementById("reader-goal").style.display = doc.goal ? "" : "none";
-  document.getElementById("reader-body").textContent = doc.text || "";
+  document.getElementById("reader-body").innerHTML = formatBody(doc.text || "");
   document.getElementById("reader-body").style.setProperty("--reader-size", readerSize + "rem");
   document.getElementById("top-title").textContent = doc.title.length > 28 ? doc.title.slice(0, 26) + "…" : doc.title;
   showView("reader");
@@ -84,10 +84,10 @@ function goHome() {
   closeSidebar();
 }
 
-function goCheats() {
+function goModules() {
   goHome();
   setTimeout(() => {
-    document.getElementById("cheat-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("module-accordion")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, 50);
 }
 
@@ -119,66 +119,108 @@ function sortDocs(docs) {
 }
 
 function renderCards() {
-  const cheats = course.docs.filter((d) => d.type === "cheat");
-  const others = course.docs.filter((d) => d.type !== "cheat");
-
-  const cheatGrid = document.getElementById("cheat-grid");
-  if (!cheats.length) {
-    cheatGrid.innerHTML = "";
-  } else {
-    cheatGrid.innerHTML = sortDocs(cheats)
-      .map(
-        (d) => `
-    <button type="button" class="card" data-id="${d.id}">
-      <div class="card-title">${esc(d.title)}</div>
-      <div class="card-meta">${esc(d.module)}</div>
-      <div class="card-goal">${esc(d.goal || "")}</div>
-    </button>`
-      )
-      .join("");
-  }
-
   const modules = {};
-  for (const d of others) {
+  for (const d of course.docs) {
     const m = d.module || "Прочее";
     if (!modules[m]) modules[m] = [];
     modules[m].push(d);
   }
-  const moduleGrid = document.getElementById("module-grid");
-  moduleGrid.innerHTML = sortModules(Object.entries(modules))
-    .map(([mod, docs]) => {
-      return (
-        `<div class="module-block"><div class="module-heading">${esc(mod)}</div>` +
-        sortDocs(docs)
-          .map(
-            (d) => `
-      <button type="button" class="card" data-id="${d.id}">
-        <div class="card-title">${esc(d.title)}</div>
-        <div class="card-meta">${esc(mod)}</div>
-        <div class="card-goal">${esc(d.goal || "")}</div>
-      </button>`
-          )
-          .join("") +
-        `</div>`
-      );
+
+  const acc = document.getElementById("module-accordion");
+  if (!acc) return;
+
+  acc.innerHTML = sortModules(Object.entries(modules))
+    .map(([mod, docs], idx) => {
+      const items = sortDocs(docs)
+        .map(
+          (d) => `
+        <button type="button" class="acc-item" data-id="${d.id}">
+          <span class="acc-item-title">${esc(d.title)}</span>
+          <span class="acc-item-goal">${esc((d.goal || "").slice(0, 90))}${(d.goal || "").length > 90 ? "…" : ""}</span>
+        </button>`
+        )
+        .join("");
+      const open = idx === 0 ? " open" : "";
+      return `
+      <div class="acc-block${open}" data-mod="${esc(mod)}">
+        <button type="button" class="acc-head" aria-expanded="${idx === 0 ? "true" : "false"}">
+          <span class="acc-title">${esc(mod)}</span>
+          <span class="acc-count">${docs.length}</span>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </button>
+        <div class="acc-body">${items}</div>
+      </div>`;
     })
     .join("");
 
   const navMod = document.getElementById("nav-modules");
   let navHtml = "";
-  const byMod = {};
-  for (const d of course.docs) {
-    const m = d.module || "Прочее";
-    if (!byMod[m]) byMod[m] = [];
-    byMod[m].push(d);
-  }
-  for (const [mod, docs] of sortModules(Object.entries(byMod))) {
+  for (const [mod, docs] of sortModules(Object.entries(modules))) {
     navHtml += `<div class="nav-label">${esc(mod)}</div>`;
     for (const d of sortDocs(docs)) {
       navHtml += `<button type="button" class="nav-item" data-id="${d.id}">${esc(d.title)}</button>`;
     }
   }
-  navMod.innerHTML = navHtml;
+  if (navMod) navMod.innerHTML = navHtml;
+}
+
+function formatBody(text) {
+  if (!text) return "";
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const out = [];
+  let inList = false;
+  const closeList = () => {
+    if (inList) {
+      out.push("</ul>");
+      inList = false;
+    }
+  };
+  for (let raw of lines) {
+    const t = raw.trim();
+    if (!t) {
+      closeList();
+      continue;
+    }
+    if (/^[─\-—]{3,}$/.test(t) || t === "⸻") {
+      closeList();
+      out.push('<hr class="reader-hr" />');
+      continue;
+    }
+    if (/^\d+[\.\)]\s+\S/.test(t) && t.length < 120 && !t.includes("→")) {
+      closeList();
+      out.push(`<h3 class="reader-h">${esc(t)}</h3>`);
+      continue;
+    }
+    if (
+      /^(СТРАТЕГИЯ|ЧАСТЬ|Урок\s+\d+)/i.test(t) ||
+      (t === t.toUpperCase() && t.length > 8 && t.length < 90 && /[А-ЯA-Z]/.test(t) && !t.includes("●"))
+    ) {
+      closeList();
+      out.push(`<h2 class="reader-h2">${esc(t)}</h2>`);
+      continue;
+    }
+    if (/^[●•\-–—\*○◦]\s+/.test(t)) {
+      if (!inList) {
+        out.push('<ul class="reader-ul">');
+        inList = true;
+      }
+      const item = t.replace(/^[●•\-–—\*○◦]\s+/, "");
+      out.push(`<li>${esc(item)}</li>`);
+      continue;
+    }
+    closeList();
+    if (/^Цель\s*(урока)?\s*[:：]/i.test(t)) {
+      out.push(`<p class="reader-goal-line"><strong>${esc(t)}</strong></p>`);
+      continue;
+    }
+    if (/^Кратко/i.test(t)) {
+      out.push(`<p class="reader-summary"><strong>${esc(t)}</strong></p>`);
+      continue;
+    }
+    out.push(`<p>${esc(t)}</p>`);
+  }
+  closeList();
+  return out.join("\n");
 }
 
 function esc(s) {
@@ -266,7 +308,7 @@ document.querySelectorAll(".bottom-nav .tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     const go = tab.dataset.go;
     if (go === "home") goHome();
-    else if (go === "cheats") goCheats();
+    else if (go === "modules") goModules();
     else if (go === "search") openSearchModal();
     else if (go === "theme") cycleTheme();
   });
@@ -277,7 +319,7 @@ document.querySelectorAll("[data-go]").forEach((el) => {
   el.addEventListener("click", () => {
     const go = el.dataset.go;
     if (go === "home") goHome();
-    else if (go === "cheats") goCheats();
+    else if (go === "modules") goModules();
   });
 });
 
@@ -327,6 +369,22 @@ document.getElementById("modal-search").addEventListener("input", (e) => {
   window._ms = setTimeout(() => renderResults(search(q), "modal-results"), 150);
 });
 
+document.addEventListener("click", (e) => {
+  const head = e.target.closest(".acc-head");
+  if (!head) return;
+  const block = head.closest(".acc-block");
+  if (!block) return;
+  const willOpen = !block.classList.contains("open");
+  document.querySelectorAll(".acc-block.open").forEach((b) => {
+    if (b !== block) {
+      b.classList.remove("open");
+      b.querySelector(".acc-head")?.setAttribute("aria-expanded", "false");
+    }
+  });
+  block.classList.toggle("open", willOpen);
+  head.setAttribute("aria-expanded", willOpen ? "true" : "false");
+});
+
 async function init() {
   const docs = [];
   try {
@@ -348,8 +406,11 @@ async function init() {
     console.error(err);
   }
   if (!docs.length) {
-    document.getElementById("cheat-grid").innerHTML =
-      "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Обновите страницу с очисткой кэша.</p>";
+    const acc = document.getElementById("module-accordion");
+    if (acc) {
+      acc.innerHTML =
+        "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Обновите страницу с очисткой кэша.</p>";
+    }
     return;
   }
   course = { docs };
