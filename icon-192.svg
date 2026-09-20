@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="36" fill="#16130e"/>
+  <rect x="24" y="24" width="144" height="144" rx="24" fill="#f4f0e6"/>
+  <text x="96" y="128" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="96" fill="#3d5c52">В</text>
+</svg>
