@@ -293,18 +293,23 @@ document.getElementById("modal-search").addEventListener("input", (e) => {
 });
 
 async function init() {
-  try {
-    const [a, b] = await Promise.all([
-      fetch("data/part1.json").then(r => r.json()),
-      fetch("data/part2.json").then(r => r.json()),
-    ]);
-    course = { docs: [...(a.docs || []), ...(b.docs || [])] };
-  } catch (err) {
-    console.error(err);
+  const docs = [];
+  for (const path of ["data/part1.json", "data/part2.json"]) {
+    try {
+      const r = await fetch(path);
+      if (!r.ok) throw new Error(path + " " + r.status);
+      const data = await r.json();
+      docs.push(...(data.docs || []));
+    } catch (err) {
+      console.error("load fail", path, err);
+    }
+  }
+  if (!docs.length) {
     document.getElementById("cheat-grid").innerHTML =
-      "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Откройте сайт через локальный сервер (не file://).</p>";
+      "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Обновите страницу (лучше с очисткой кэша) или переустановите приложение.</p>";
     return;
   }
+  course = { docs };
   renderCards();
   showView("home");
   initPwa();
