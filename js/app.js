@@ -1,3 +1,5 @@
+import { initPwa } from "./pwa.js";
+
 const THEME_KEY = "vp-theme";
 const FONT_KEY = "vp-font";
 const themes = ["light", "dark", "night"];
@@ -305,5 +307,6 @@ async function init() {
   }
   renderCards();
   showView("home");
+  initPwa();
 }
 init();
