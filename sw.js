@@ -1,17 +1,18 @@
 /* Service worker: offline cache for Военное право PWA */
-const CACHE = "vp-v1";
+const CACHE = "vp-v2";
 const PRECACHE = [
   "./",
   "./index.html",
   "./css/styles.css",
+  "./css/pwa.css",
   "./js/app.js",
+  "./js/pwa.js",
   "./data/part1.json",
   "./data/part2.json",
   "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./icon-512-maskable.png",
-  "./apple-touch-icon.png",
+  "./favicon.svg",
+  "./icon-192.svg",
+  "./icon-512.svg",
 ];
 
 self.addEventListener("install", (event) => {
