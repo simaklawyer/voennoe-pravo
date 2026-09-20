@@ -61,7 +61,9 @@ export function setupOfflineBar() {
 export function registerSW() {
   if (!("serviceWorker" in navigator)) return;
   const swUrl = new URL("sw.js", window.location.href).href;
-  navigator.serviceWorker.register(swUrl).catch((err) => {
+  navigator.serviceWorker.register(swUrl).then((reg) => {
+    reg.update().catch(() => {});
+  }).catch((err) => {
     console.warn("SW register failed", err);
   });
 }

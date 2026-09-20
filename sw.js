@@ -1,5 +1,5 @@
-/* Service worker: offline cache for Военное право PWA */
-const CACHE = "vp-v2";
+/* Service worker v3 — network-first, fail-open */
+const CACHE = "vp-v3";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -34,33 +34,27 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) {
-    if (url.hostname.includes("fonts.g") || url.hostname.includes("gstatic")) {
-      event.respondWith(
-        caches.open(CACHE).then(async (cache) => {
-          const cached = await cache.match(req);
-          const network = fetch(req)
-            .then((res) => {
-              if (res.ok) cache.put(req, res.clone());
-              return res;
-            })
-            .catch(() => cached);
-          return cached || network;
-        })
-      );
-    }
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
-  if (req.mode === "navigate") {
+  const networkFirst =
+    req.mode === "navigate" ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".json") ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith(".webmanifest");
+
+  if (networkFirst) {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("./index.html", copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
           return res;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
     );
     return;
   }
@@ -69,7 +63,7 @@ self.addEventListener("fetch", (event) => {
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
-        if (res.ok && url.pathname.match(/\.(js|css|json|png|svg|webmanifest)$/)) {
+        if (res.ok) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copy));
         }
