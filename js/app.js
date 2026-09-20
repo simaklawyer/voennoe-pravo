@@ -96,16 +96,20 @@ function renderCards() {
   const others = course.docs.filter((d) => d.type !== "cheat");
 
   const cheatGrid = document.getElementById("cheat-grid");
-  cheatGrid.innerHTML = cheats
-    .map(
-      (d) => `
+  if (!cheats.length) {
+    cheatGrid.innerHTML = "";
+  } else {
+    cheatGrid.innerHTML = cheats
+      .map(
+        (d) => `
     <button type="button" class="card" data-id="${d.id}">
       <div class="card-title">${esc(d.title)}</div>
       <div class="card-meta">${esc(d.module)}</div>
       <div class="card-goal">${esc(d.goal || "")}</div>
     </button>`
-    )
-    .join("");
+      )
+      .join("");
+  }
 
   const modules = {};
   for (const d of others) {
@@ -155,7 +159,7 @@ function esc(s) {
 function renderResults(docs, containerId) {
   const el = document.getElementById(containerId);
   if (!docs.length) {
-    el.innerHTML = `<p style="padding:12px;color:var(--text-muted)">Ничего не найдено. Попробуйте «снятие», «СОЧ», «ВВК».</p>`;
+    el.innerHTML = `<p style="padding:12px;color:var(--text-muted)">Ничего не найдено. Попробуйте «ФЗ-53», «мобилизация», «категория».</p>`;
     return;
   }
   el.innerHTML = docs
@@ -294,19 +298,27 @@ document.getElementById("modal-search").addEventListener("input", (e) => {
 
 async function init() {
   const docs = [];
-  for (const path of ["data/part1.json","data/part2.json","data/part3.json","data/part4.json","data/part5.json","data/part6.json","data/part7.json","data/part8.json"]) {
-    try {
-      const r = await fetch(path);
-      if (!r.ok) throw new Error(path + " " + r.status);
-      const data = await r.json();
-      docs.push(...(data.docs || []));
-    } catch (err) {
-      console.error("load fail", path, err);
+  try {
+    const idx = await fetch("data/index.json").then((r) => {
+      if (!r.ok) throw new Error("index " + r.status);
+      return r.json();
+    });
+    for (const name of idx.files || []) {
+      try {
+        const r = await fetch("data/docs/" + name);
+        if (!r.ok) throw new Error(name + " " + r.status);
+        const doc = await r.json();
+        if (doc && doc.id) docs.push(doc);
+      } catch (err) {
+        console.error("load fail", name, err);
+      }
     }
+  } catch (err) {
+    console.error(err);
   }
   if (!docs.length) {
     document.getElementById("cheat-grid").innerHTML =
-      "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Обновите страницу или переустановите приложение.</p>";
+      "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Обновите страницу с очисткой кэша.</p>";
     return;
   }
   course = { docs };
