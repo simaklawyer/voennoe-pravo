@@ -91,6 +91,33 @@ function goCheats() {
   }, 50);
 }
 
+const MODULE_ORDER = [
+  "Модуль 1. Законодательство",
+  "Модуль 2. СВО-клиент и СОЧ",
+  "Модуль 3. Отсрочки и освобождение",
+  "Модуль 4. Снятие с воинского учёта",
+  "Модуль 5. Уголовка: СОЧ, приказы, СК",
+  "Модуль 6. Контракт: заключение и расторжение",
+  "Модуль 7. Обжалование и процесс",
+  "База знаний",
+  "Книга решений",
+];
+
+function sortModules(entries) {
+  return entries.sort((a, b) => {
+    const ia = MODULE_ORDER.indexOf(a[0]);
+    const ib = MODULE_ORDER.indexOf(b[0]);
+    const sa = ia === -1 ? 999 : ia;
+    const sb = ib === -1 ? 999 : ib;
+    if (sa !== sb) return sa - sb;
+    return a[0].localeCompare(b[0], "ru");
+  });
+}
+
+function sortDocs(docs) {
+  return docs.slice().sort((a, b) => (a.title || "").localeCompare(b.title || "", "ru"));
+}
+
 function renderCards() {
   const cheats = course.docs.filter((d) => d.type === "cheat");
   const others = course.docs.filter((d) => d.type !== "cheat");
@@ -99,7 +126,7 @@ function renderCards() {
   if (!cheats.length) {
     cheatGrid.innerHTML = "";
   } else {
-    cheatGrid.innerHTML = cheats
+    cheatGrid.innerHTML = sortDocs(cheats)
       .map(
         (d) => `
     <button type="button" class="card" data-id="${d.id}">
@@ -118,18 +145,22 @@ function renderCards() {
     modules[m].push(d);
   }
   const moduleGrid = document.getElementById("module-grid");
-  moduleGrid.innerHTML = Object.entries(modules)
+  moduleGrid.innerHTML = sortModules(Object.entries(modules))
     .map(([mod, docs]) => {
-      return docs
-        .map(
-          (d) => `
+      return (
+        `<div class="module-block"><div class="module-heading">${esc(mod)}</div>` +
+        sortDocs(docs)
+          .map(
+            (d) => `
       <button type="button" class="card" data-id="${d.id}">
         <div class="card-title">${esc(d.title)}</div>
         <div class="card-meta">${esc(mod)}</div>
         <div class="card-goal">${esc(d.goal || "")}</div>
       </button>`
-        )
-        .join("");
+          )
+          .join("") +
+        `</div>`
+      );
     })
     .join("");
 
@@ -141,9 +172,9 @@ function renderCards() {
     if (!byMod[m]) byMod[m] = [];
     byMod[m].push(d);
   }
-  for (const [mod, docs] of Object.entries(byMod)) {
+  for (const [mod, docs] of sortModules(Object.entries(byMod))) {
     navHtml += `<div class="nav-label">${esc(mod)}</div>`;
-    for (const d of docs) {
+    for (const d of sortDocs(docs)) {
       navHtml += `<button type="button" class="nav-item" data-id="${d.id}">${esc(d.title)}</button>`;
     }
   }
