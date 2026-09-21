@@ -1,5 +1,5 @@
-/* Service worker v4 — network-first, multi-part data */
-const CACHE = "vp-v4";
+/* Service worker v5 — shell precache, network-first data */
+const CACHE = "vp-v5";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -7,14 +7,7 @@ const PRECACHE = [
   "./css/pwa.css",
   "./js/app.js",
   "./js/pwa.js",
-  "./data/part1.json",
-  "./data/part2.json",
-  "./data/part3.json",
-  "./data/part4.json",
-  "./data/part5.json",
-  "./data/part6.json",
-  "./data/part7.json",
-  "./data/part8.json",
+  "./data/index.json",
   "./manifest.webmanifest",
   "./favicon.svg",
   "./icon-192.svg",
@@ -46,6 +39,7 @@ self.addEventListener("fetch", (event) => {
     req.mode === "navigate" ||
     url.pathname.endsWith(".html") ||
     url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css") ||
     url.pathname.endsWith(".json") ||
     url.pathname.endsWith("/") ||
     url.pathname.endsWith(".webmanifest");
