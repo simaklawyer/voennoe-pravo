@@ -6,7 +6,7 @@ const themes = ["light", "dark", "night"];
 
 let course = { docs: [] };
 let currentId = null;
-let readerSize = parseFloat(localStorage.getItem(FONT_KEY) || "1.05");
+let readerSize = parseFloat(localStorage.getItem(FONT_KEY) || "0.98");
 
 function applyTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
@@ -132,13 +132,17 @@ function renderCards() {
   acc.innerHTML = sortModules(Object.entries(modules))
     .map(([mod, docs], idx) => {
       const items = sortDocs(docs)
-        .map(
-          (d) => `
+        .map((d) => {
+          const goal = (d.goal || "").trim();
+          const goalHtml = goal
+            ? `<span class="acc-item-goal">${esc(goal.length > 100 ? goal.slice(0, 98) + "…" : goal)}</span>`
+            : "";
+          return `
         <button type="button" class="acc-item" data-id="${d.id}">
           <span class="acc-item-title">${esc(d.title)}</span>
-          <span class="acc-item-goal">${esc((d.goal || "").slice(0, 90))}${(d.goal || "").length > 90 ? "…" : ""}</span>
-        </button>`
-        )
+          ${goalHtml}
+        </button>`;
+        })
         .join("");
       const open = idx === 0 ? " open" : "";
       return `
@@ -232,7 +236,7 @@ function esc(s) {
 function renderResults(docs, containerId) {
   const el = document.getElementById(containerId);
   if (!docs.length) {
-    el.innerHTML = `<p style="padding:12px;color:var(--text-muted)">Ничего не найдено. Попробуйте «ФЗ-53», «мобилизация», «категория».</p>`;
+    el.innerHTML = `<p style="padding:12px;color:var(--text-muted)">Ничего не найдено.</p>`;
     return;
   }
   el.innerHTML = docs
@@ -282,12 +286,12 @@ document.getElementById("btn-search").addEventListener("click", openSearchModal)
 document.getElementById("btn-close-search").addEventListener("click", closeSearchModal);
 
 document.getElementById("btn-font-up").addEventListener("click", () => {
-  readerSize = Math.min(1.5, readerSize + 0.1);
+  readerSize = Math.min(1.4, readerSize + 0.08);
   localStorage.setItem(FONT_KEY, String(readerSize));
   document.getElementById("reader-body").style.setProperty("--reader-size", readerSize + "rem");
 });
 document.getElementById("btn-font-down").addEventListener("click", () => {
-  readerSize = Math.max(0.85, readerSize - 0.1);
+  readerSize = Math.max(0.85, readerSize - 0.08);
   localStorage.setItem(FONT_KEY, String(readerSize));
   document.getElementById("reader-body").style.setProperty("--reader-size", readerSize + "rem");
 });
@@ -372,6 +376,8 @@ document.getElementById("modal-search").addEventListener("input", (e) => {
 document.addEventListener("click", (e) => {
   const head = e.target.closest(".acc-head");
   if (!head) return;
+  e.preventDefault();
+  e.stopPropagation();
   const block = head.closest(".acc-block");
   if (!block) return;
   const willOpen = !block.classList.contains("open");
@@ -392,15 +398,21 @@ async function init() {
       if (!r.ok) throw new Error("index " + r.status);
       return r.json();
     });
-    for (const name of idx.files || []) {
-      try {
-        const r = await fetch("data/docs/" + name);
-        if (!r.ok) throw new Error(name + " " + r.status);
-        const doc = await r.json();
-        if (doc && doc.id) docs.push(doc);
-      } catch (err) {
-        console.error("load fail", name, err);
-      }
+    const names = idx.files || [];
+    const loaded = await Promise.all(
+      names.map(async (name) => {
+        try {
+          const r = await fetch("data/docs/" + name);
+          if (!r.ok) throw new Error(name + " " + r.status);
+          return await r.json();
+        } catch (err) {
+          console.error("load fail", name, err);
+          return null;
+        }
+      })
+    );
+    for (const doc of loaded) {
+      if (doc && doc.id) docs.push(doc);
     }
   } catch (err) {
     console.error(err);
@@ -409,7 +421,7 @@ async function init() {
     const acc = document.getElementById("module-accordion");
     if (acc) {
       acc.innerHTML =
-        "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Обновите страницу с очисткой кэша.</p>";
+        "<p style='color:var(--text-muted)'>Не удалось загрузить данные. Обновите с очисткой кэша.</p>";
     }
     return;
   }
