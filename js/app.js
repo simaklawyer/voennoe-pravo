@@ -253,7 +253,7 @@ function renderCards() {
       esc(mod) +
       " <span>" +
       docs.length +
-      "</span></button><div class="nav-acc-body">";
+      '</span></button><div class="nav-acc-body">';
     for (const d of sortDocs(docs)) {
       navHtml +=
         '<button type="button" class="nav-item" data-id="' +

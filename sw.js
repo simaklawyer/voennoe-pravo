@@ -1,5 +1,5 @@
-/* Service worker v4 — network-first, multi-part data */
-const CACHE = "vp-v6";
+/* Service worker — network-first, multi-part data */
+const CACHE = "vp-v7";
 const PRECACHE = [
   "./",
   "./index.html",
