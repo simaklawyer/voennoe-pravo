@@ -1,5 +1,5 @@
-/* Service worker — network-first, multi-part data */
-const CACHE = "vp-v7";
+/* Service worker vp-v8 */
+const CACHE = "vp-v8";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -38,10 +38,8 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
-
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-
   const networkFirst =
     req.mode === "navigate" ||
     url.pathname.endsWith(".html") ||
@@ -49,7 +47,6 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith(".json") ||
     url.pathname.endsWith("/") ||
     url.pathname.endsWith(".webmanifest");
-
   if (networkFirst) {
     event.respondWith(
       fetch(req)
@@ -64,7 +61,6 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
-
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
