@@ -1,5 +1,5 @@
-/* Service worker vp-v11 */
-const CACHE = "vp-v11";
+/* Service worker vp-v12 */
+const CACHE = "vp-v12";
 const PRECACHE = [
   "./",
   "./index.html",
