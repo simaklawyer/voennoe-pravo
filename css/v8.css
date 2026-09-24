@@ -183,3 +183,33 @@
 }
 .reader-title { margin: 0 0 8px; font-size: 1.25rem; font-weight: 700; line-height: 1.25; }
 .reader-module { font-size: .72rem; color: var(--text-muted); margin: 0 0 2px; letter-spacing: .02em; }
+
+.acc-toolbar {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 0 2px 4px;
+}
+.acc-toolbar .text-btn {
+  font-size: .78rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--text-muted);
+}
+.acc-toolbar .text-btn:active {
+  background: var(--line);
+}
+.nav-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 4px;
+}
+.nav-collapse-all {
+  font-size: .72rem;
+  padding: 4px 8px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
