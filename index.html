@@ -15,9 +15,9 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="icon-192.svg" />
-  <link rel="stylesheet" href="css/styles.css?v=15" />
-  <link rel="stylesheet" href="css/v8.css?v=15" />
-  <link rel="stylesheet" href="css/pwa.css?v=15" />
+  <link rel="stylesheet" href="css/styles.css?v=18" />
+  <link rel="stylesheet" href="css/v8.css?v=18" />
+  <link rel="stylesheet" href="css/pwa.css?v=18" />
   <script>
     try {
       if (!localStorage.getItem("vp-theme-v2")) {
@@ -130,6 +130,10 @@
         </div>
         <h2 class="reader-title" id="reader-title"></h2>
         <p class="reader-goal" id="reader-goal"></p>
+        <nav class="reader-toc hidden" id="reader-toc" aria-label="Оглавление урока">
+          <div class="reader-toc-title">Оглавление</div>
+          <div class="reader-toc-list" id="reader-toc-list"></div>
+        </nav>
         <article class="reader-body" id="reader-body"></article>
         <button type="button" class="to-top hidden" id="btn-reader-top">↑ К началу урока</button>
       </section>
@@ -171,6 +175,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=15"></script>
+  <script type="module" src="js/app.js?v=18"></script>
 </body>
 </html>

@@ -99,6 +99,8 @@ function formatBody(text) {
   if (!text) return "";
   const lines = text.replace(/\r\n/g, "\n").split("\n");
   const out = [];
+  const toc = [];
+  let headingIndex = 0;
   let listBuf = [];
   let listType = null;
   function flushList() {
@@ -108,27 +110,42 @@ function formatBody(text) {
     listBuf = [];
     listType = null;
   }
+  function pushHeading(tag, className, label) {
+    const id = `reader-heading-${headingIndex++}`;
+    toc.push({ id, label, level: tag === "h4" ? 4 : 3 });
+    out.push(`<${tag} id="${id}" class="${className}">${esc(label)}</${tag}>`);
+  }
   for (let raw of lines) {
     const line = raw.trim();
     if (!line) { flushList(); continue; }
+    const callout = line.match(/^(?:[!?•●]\s*)?(важно|важный нюанс|документы|риск)\s*:\s*(.+)$/i);
+    const riskLine = line.match(/^(?:[!?•●]\s*)?(риск)\s+(.+)$/i);
+    const resolvedCallout = callout || riskLine;
+    if (resolvedCallout) {
+      flushList();
+      const kind = resolvedCallout[1].toLowerCase();
+      const cls = kind.startsWith("важ") ? "important" : kind === "документы" ? "documents" : "risk";
+      out.push(`<aside class="callout callout-${cls}"><strong>${esc(resolvedCallout[1])}</strong><p>${esc(resolvedCallout[2])}</p></aside>`);
+      continue;
+    }
     if (/^(цель урока|цель:|для каких дел|входные данные|пошаговый маршрут|развилки|связка)/i.test(line)) {
       flushList();
-      out.push('<h3 class="rb-h">' + esc(line.replace(/:$/, "")) + "</h3>");
+      pushHeading("h3", "rb-h", line.replace(/:$/, ""));
       continue;
     }
     if (/^\d+\.\s+\S/.test(line) && line.length < 140) {
       flushList();
-      out.push('<h3 class="rb-h">' + esc(line) + "</h3>");
+      pushHeading("h3", "rb-h", line);
       continue;
     }
     if (/^(шаг\s+\d+|стратегия\s*№?\s*\d+)/i.test(line) && line.length < 120) {
       flushList();
-      out.push('<h3 class="rb-h">' + esc(line) + "</h3>");
+      pushHeading("h3", "rb-h", line);
       continue;
     }
     if (/^(что регулирует|на практике|особенности|пример из практики|нормативная база|алгоритм|важно|правило)/i.test(line) && line.length < 80) {
       flushList();
-      out.push('<h4 class="rb-sub">' + esc(line.replace(/:$/, "")) + "</h4>");
+      pushHeading("h4", "rb-sub", line.replace(/:$/, ""));
       continue;
     }
     if (/^[-•●]\s+/.test(line)) {
@@ -147,7 +164,22 @@ function formatBody(text) {
     out.push("<p>" + esc(line) + "</p>");
   }
   flushList();
-  return out.join("\n");
+  return { html: out.join("\n"), toc };
+}
+
+function renderToc(toc) {
+  const nav = document.getElementById("reader-toc");
+  const list = document.getElementById("reader-toc-list");
+  if (!nav || !list) return;
+  if (toc.length < 2) {
+    nav.classList.add("hidden");
+    list.innerHTML = "";
+    return;
+  }
+  list.innerHTML = toc
+    .map((item) => `<a class="toc-link toc-level-${item.level}" href="#${item.id}" data-anchor="${item.id}">${esc(item.label)}</a>`)
+    .join("");
+  nav.classList.remove("hidden");
 }
 
 function openDoc(id) {
@@ -166,7 +198,9 @@ function openDoc(id) {
   if (doc.goal) { goalEl.textContent = doc.goal; goalEl.style.display = ""; }
   else goalEl.style.display = "none";
   const body = document.getElementById("reader-body");
-  body.innerHTML = formatBody(doc.text || "");
+  const formatted = formatBody(doc.text || "");
+  body.innerHTML = formatted.html;
+  renderToc(formatted.toc);
   body.style.setProperty("--reader-size", readerSize + "rem");
   document.getElementById("top-title").textContent =
     doc.title.length > 28 ? doc.title.slice(0, 26) + "…" : doc.title;

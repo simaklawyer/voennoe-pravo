@@ -148,6 +148,12 @@ body {
 .reader-module:hover { text-decoration: underline; }
 .reader-position { color: var(--text-muted); font-size: .72rem; white-space: nowrap; }
 .reader-title { margin: 0 0 10px; font-size: 1.35rem; font-weight: 700; line-height: 1.25; }
+.reader-toc { margin: 0 0 18px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }
+.reader-toc-title { margin-bottom: 6px; font: 700 .8rem var(--font-sans); color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.reader-toc-list { display: flex; flex-direction: column; gap: 3px; }
+.toc-link { color: var(--link); font: .86rem/1.4 var(--font-sans); text-decoration: none; }
+.toc-link:hover { text-decoration: underline; }
+.toc-level-4 { padding-left: 14px; font-size: .8rem; }
 .reader-body {
   font-family: var(--font-serif); font-size: var(--reader-size, 1.02rem);
   line-height: 1.55; max-width: 68ch;
@@ -272,6 +278,15 @@ body {
   font-family: var(--font-sans); font-size: .95em; font-weight: 650;
   margin: .75rem 0 .25rem; color: var(--text-muted);
 }
+.reader-body .callout { margin: .9rem 0; padding: .75rem .9rem; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); background: var(--bg-soft); font-family: var(--font-sans); }
+.reader-body .callout strong { display: block; margin-bottom: .2rem; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+.reader-body .callout p { margin: 0; font-size: .92em; line-height: 1.45; }
+.reader-body .callout-important { border-left-color: #d97706; background: #fffbeb; }
+.reader-body .callout-important strong { color: #92400e; }
+.reader-body .callout-documents { border-left-color: #0284c7; background: #f0f9ff; }
+.reader-body .callout-documents strong { color: #075985; }
+.reader-body .callout-risk { border-left-color: #dc2626; background: #fef2f2; }
+.reader-body .callout-risk strong { color: #991b1b; }
 .reader-body ul, .reader-body ol { margin: 0 0 .7rem; padding-left: 1.2rem; }
 .reader-body li { margin: .15rem 0; line-height: 1.45; }
 #reader-goal {
