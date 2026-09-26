@@ -42,17 +42,18 @@ function norm(s) {
 }
 
 function search(q) {
+  activeSearchQuery = q;
   const nq = norm(q);
   if (!nq || nq.length < 2) return [];
   const terms = nq.split(" ").filter(Boolean);
   const scored = [];
-  for (const d of course.docs) {
+  for (const d of course.docs.filter(isVisibleDoc)) {
     const hay = norm(
-      d.title + " " + (d.tags || []).join(" ") + " " + (d.goal || "") + " " + (d.text || "").slice(0, 4000)
+      d.title + " " + (d.tags || []).join(" ") + " " + (d.goal || "") + " " + (d.text || "")
     );
     let score = 0;
     for (const t of terms) {
-      if (hay.includes(t)) score += 1;
+      if (hay.includes(t)) score += Math.min(5, hay.split(t).length - 1);
       if (norm(d.title).includes(t)) score += 3;
       if ((d.tags || []).some((tag) => norm(tag).includes(t))) score += 2;
     }
@@ -60,6 +61,22 @@ function search(q) {
   }
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, 20).map((x) => x.doc);
+}
+
+function resultSnippet(doc) {
+  const source = doc.text || doc.goal || doc.title || "";
+  const terms = norm(activeSearchQuery).split(" ").filter(Boolean);
+  const lower = source.toLowerCase();
+  const phraseAt = lower.indexOf(activeSearchQuery.trim().toLowerCase());
+  const matchAt = terms
+    .map((term) => lower.indexOf(term))
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b)[0];
+  const bestMatchAt = phraseAt >= 0 ? phraseAt : matchAt;
+  if (bestMatchAt === undefined) return source.slice(0, 160) + (source.length > 160 ? "…" : "");
+  const start = Math.max(0, bestMatchAt - 70);
+  const end = Math.min(source.length, bestMatchAt + 150);
+  return (start > 0 ? "…" : "") + source.slice(start, end).replace(/\s+/g, " ") + (end < source.length ? "…" : "");
 }
 
 function visibleDocsInModule(module) {
@@ -433,8 +450,8 @@ function renderResults(docs, containerId) {
         '</div><div class="result-title">' +
         esc(d.title) +
         '</div><div class="result-snippet">' +
-        esc((d.goal || d.text || "").slice(0, 160)) +
-        "…</div></button>"
+        esc(resultSnippet(d)) +
+        "</div></button>"
     )
     .join("");
 }
