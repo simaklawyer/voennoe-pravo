@@ -112,7 +112,7 @@ function formatBody(text) {
     if (line.includes(";") && line.length < 400 && (line.match(/;/g) || []).length >= 2) {
       flushList();
       const parts = line.split(";").map((p) => p.trim()).filter(Boolean);
-      out.push("<ul>" + parts.map((p) => "<li>" + esc(p.replace(/\.$/, "")) + "</li>") + "</ul>");
+      out.push("<ul>" + parts.map((p) => "<li>" + esc(p.replace(/\.$/, "")) + "</li>").join("") + "</ul>");
       continue;
     }
     flushList();
@@ -318,33 +318,30 @@ function closeSearchModal() {
   document.getElementById("search-modal").classList.add("hidden");
 }
 
-function setAllAcc(open) {
-  document.querySelectorAll(".acc").forEach((acc) => {
-    acc.classList.toggle("open", open);
-    const head = acc.querySelector(".acc-head");
-    if (head) head.setAttribute("aria-expanded", open ? "true" : "false");
-  });
-}
-function setAllNavAcc(open) {
-  document.querySelectorAll(".nav-acc").forEach((acc) => {
-    acc.classList.toggle("open", open);
-  });
-}
-
 document.addEventListener("click", (e) => {
   if (e.target.closest("#btn-acc-collapse")) {
-    setAllAcc(false);
+    document.querySelectorAll(".acc").forEach((acc) => {
+      acc.classList.remove("open");
+      const h = acc.querySelector(".acc-head");
+      if (h) h.setAttribute("aria-expanded", "false");
+    });
     e.stopPropagation();
     return;
   }
   if (e.target.closest("#btn-acc-expand")) {
-    setAllAcc(true);
+    document.querySelectorAll(".acc").forEach((acc) => {
+      acc.classList.add("open");
+      const h = acc.querySelector(".acc-head");
+      if (h) h.setAttribute("aria-expanded", "true");
+    });
     e.stopPropagation();
     return;
   }
   if (e.target.closest("#btn-nav-collapse")) {
     const anyOpen = document.querySelector(".nav-acc.open");
-    setAllNavAcc(!anyOpen);
+    document.querySelectorAll(".nav-acc").forEach((acc) => {
+      acc.classList.toggle("open", !anyOpen);
+    });
     const btn = document.getElementById("btn-nav-collapse");
     if (btn) btn.textContent = anyOpen ? "Развернуть" : "Свернуть";
     e.stopPropagation();
