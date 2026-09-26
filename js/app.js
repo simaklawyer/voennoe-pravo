@@ -3,6 +3,8 @@ import { initPwa } from "./pwa.js";
 const THEME_KEY = "vp-theme";
 const THEME_V = "vp-theme-v2";
 const FONT_KEY = "vp-font";
+const LAST_DOC_KEY = "vp-last-doc";
+const OPEN_MODULE_KEY = "vp-open-module";
 const themes = ["light", "dark", "night"];
 
 let course = { docs: [] };
@@ -56,6 +58,30 @@ function search(q) {
   }
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, 20).map((x) => x.doc);
+}
+
+function visibleDocsInModule(module) {
+  return sortDocs(course.docs.filter((d) => isVisibleDoc(d) && d.module === module));
+}
+
+function saveOpenModule(module) {
+  if (module) localStorage.setItem(OPEN_MODULE_KEY, module);
+}
+
+function renderContinue() {
+  const card = document.getElementById("continue-card");
+  const button = document.getElementById("btn-continue");
+  const meta = document.getElementById("continue-meta");
+  if (!card || !button || !meta) return;
+  const lastId = localStorage.getItem(LAST_DOC_KEY);
+  const doc = course.docs.find((d) => d.id === lastId && isVisibleDoc(d));
+  if (!doc) {
+    card.classList.add("hidden");
+    return;
+  }
+  button.dataset.id = doc.id;
+  meta.textContent = `${doc.module} · ${doc.title}`;
+  card.classList.remove("hidden");
 }
 
 function showView(name) {
@@ -126,7 +152,13 @@ function openDoc(id) {
   const doc = course.docs.find((d) => d.id === id);
   if (!doc) return;
   currentId = id;
-  document.getElementById("reader-module").textContent = doc.module || "";
+  const moduleDocs = visibleDocsInModule(doc.module);
+  const docIndex = moduleDocs.findIndex((d) => d.id === doc.id);
+  const moduleButton = document.getElementById("reader-module");
+  moduleButton.textContent = doc.module || "";
+  moduleButton.dataset.module = doc.module || "";
+  document.getElementById("reader-position").textContent =
+    docIndex >= 0 ? `${docIndex + 1} из ${moduleDocs.length}` : "";
   document.getElementById("reader-title").textContent = doc.title;
   const goalEl = document.getElementById("reader-goal");
   if (doc.goal) { goalEl.textContent = doc.goal; goalEl.style.display = ""; }
@@ -136,10 +168,27 @@ function openDoc(id) {
   body.style.setProperty("--reader-size", readerSize + "rem");
   document.getElementById("top-title").textContent =
     doc.title.length > 28 ? doc.title.slice(0, 26) + "…" : doc.title;
+  localStorage.setItem(LAST_DOC_KEY, doc.id);
+  saveOpenModule(doc.module);
+  updateReaderNav(moduleDocs, docIndex);
+  renderContinue();
   showView("reader");
   document.getElementById("main").scrollTop = 0;
   closeSidebar();
   closeSearchModal();
+}
+
+function updateReaderNav(list, index) {
+  const prev = document.getElementById("btn-prev");
+  const next = document.getElementById("btn-next");
+  const hasPrev = index > 0;
+  const hasNext = index >= 0 && index < list.length - 1;
+  prev.textContent = hasPrev ? "← Предыдущий" : "← К содержанию";
+  next.textContent = hasNext ? "Следующий →" : "К концу раздела";
+  prev.disabled = false;
+  next.disabled = !hasNext;
+  prev.title = hasPrev ? list[index - 1].title : "Вернуться к содержанию модуля";
+  next.title = hasNext ? list[index + 1].title : "Вы достигли последнего материала раздела";
 }
 
 function goHome() {
@@ -153,6 +202,18 @@ function goModules() {
   goHome();
   setTimeout(() => {
     document.getElementById("module-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 40);
+}
+
+function goModule(module) {
+  goHome();
+  saveOpenModule(module);
+  setTimeout(() => {
+    const acc = [...document.querySelectorAll(".acc")].find((el) => el.dataset.mod === module);
+    if (!acc) return;
+    acc.classList.add("open");
+    acc.querySelector(".acc-head")?.setAttribute("aria-expanded", "true");
+    acc.scrollIntoView({ behavior: "smooth", block: "start" });
   }, 40);
 }
 
@@ -246,6 +307,12 @@ function renderCards() {
     '<button type="button" class="text-btn" id="btn-acc-collapse">Свернуть все</button>' +
     "</div>" +
     accHtml;
+  const savedModule = localStorage.getItem(OPEN_MODULE_KEY);
+  if (savedModule) {
+    const savedAcc = [...moduleGrid.querySelectorAll(".acc")].find((el) => el.dataset.mod === savedModule);
+    savedAcc?.classList.add("open");
+    savedAcc?.querySelector(".acc-head")?.setAttribute("aria-expanded", "true");
+  }
   const navMod = document.getElementById("nav-modules");
   let navHtml =
     '<div class="nav-label-row"><div class="nav-label">Модули</div>' +
@@ -268,6 +335,7 @@ function renderCards() {
     navHtml += "</div></div>";
   }
   navMod.innerHTML = navHtml;
+  renderContinue();
 }
 
 function esc(s) {
@@ -325,6 +393,7 @@ document.addEventListener("click", (e) => {
       const h = acc.querySelector(".acc-head");
       if (h) h.setAttribute("aria-expanded", "false");
     });
+    localStorage.removeItem(OPEN_MODULE_KEY);
     e.stopPropagation();
     return;
   }
@@ -352,6 +421,7 @@ document.addEventListener("click", (e) => {
     const acc = head.closest(".acc");
     const open = acc.classList.toggle("open");
     head.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) saveOpenModule(acc.dataset.mod);
     e.stopPropagation();
     return;
   }
@@ -373,6 +443,10 @@ document.getElementById("overlay").addEventListener("click", closeSidebar);
 document.getElementById("btn-theme").addEventListener("click", cycleTheme);
 document.getElementById("btn-search").addEventListener("click", openSearchModal);
 document.getElementById("btn-close-search").addEventListener("click", closeSearchModal);
+document.getElementById("reader-module").addEventListener("click", () => {
+  const module = document.getElementById("reader-module").dataset.module;
+  if (module) goModule(module);
+});
 
 document.getElementById("btn-font-up").addEventListener("click", () => {
   readerSize = Math.min(1.4, readerSize + 0.08);
@@ -387,14 +461,16 @@ document.getElementById("btn-font-down").addEventListener("click", () => {
 
 document.getElementById("btn-prev").addEventListener("click", () => {
   if (!currentId) return goHome();
-  const list = course.docs.filter(isVisibleDoc);
+  const current = course.docs.find((d) => d.id === currentId);
+  const list = current ? visibleDocsInModule(current.module) : [];
   const idx = list.findIndex((d) => d.id === currentId);
   if (idx > 0) openDoc(list[idx - 1].id);
-  else goHome();
+  else if (current) goModule(current.module);
 });
 document.getElementById("btn-next").addEventListener("click", () => {
   if (!currentId) return;
-  const list = course.docs.filter(isVisibleDoc);
+  const current = course.docs.find((d) => d.id === currentId);
+  const list = current ? visibleDocsInModule(current.module) : [];
   const idx = list.findIndex((d) => d.id === currentId);
   if (idx >= 0 && idx < list.length - 1) openDoc(list[idx + 1].id);
 });
@@ -463,6 +539,11 @@ document.getElementById("modal-search").addEventListener("input", (e) => {
   clearTimeout(window._ms);
   window._ms = setTimeout(() => renderResults(search(q), "modal-results"), 150);
 });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !document.getElementById("search-modal").classList.contains("hidden")) {
+    closeSearchModal();
+  }
+});
 
 async function init() {
   const docs = [];
@@ -496,6 +577,7 @@ async function init() {
   }
   course = { docs };
   renderCards();
+  renderContinue();
   showView("home");
   initPwa();
 }

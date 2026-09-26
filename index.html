@@ -102,6 +102,13 @@
           <button type="button" class="chip" data-q="увольнение">Увольнение</button>
         </div>
 
+        <section class="continue-card hidden" id="continue-card" aria-labelledby="continue-title">
+          <div class="continue-kicker">Ваш прогресс</div>
+          <h3 id="continue-title">Продолжить чтение</h3>
+          <p id="continue-meta"></p>
+          <button type="button" class="btn" id="btn-continue" data-id="">Открыть материал</button>
+        </section>
+
         <h3 class="section-title">Модули курса</h3>
         <div class="module-list" id="module-grid"></div>
         <div class="card-grid" id="cheat-grid" hidden></div>
@@ -116,7 +123,10 @@
           </div>
           <button type="button" class="text-btn" id="btn-next">Дальше →</button>
         </div>
-        <p class="reader-module" id="reader-module"></p>
+        <div class="reader-context">
+          <button type="button" class="reader-module" id="reader-module" aria-label="Вернуться к содержанию модуля"></button>
+          <span class="reader-position" id="reader-position"></span>
+        </div>
         <h2 class="reader-title" id="reader-title"></h2>
         <p class="reader-goal" id="reader-goal"></p>
         <article class="reader-body" id="reader-body"></article>
