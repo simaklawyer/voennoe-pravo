@@ -9,6 +9,8 @@ const themes = ["light", "dark", "night"];
 
 let course = { docs: [] };
 let currentId = null;
+let activeSearchQuery = "";
+let searchTrigger = null;
 let readerSize = parseFloat(localStorage.getItem(FONT_KEY) || "1.02");
 
 function applyTheme(t) {
@@ -174,6 +176,8 @@ function openDoc(id) {
   renderContinue();
   showView("reader");
   document.getElementById("main").scrollTop = 0;
+  window.scrollTo(0, 0);
+  updateReadingProgress();
   closeSidebar();
   closeSearchModal();
 }
@@ -189,6 +193,19 @@ function updateReaderNav(list, index) {
   next.disabled = !hasNext;
   prev.title = hasPrev ? list[index - 1].title : "Вернуться к содержанию модуля";
   next.title = hasNext ? list[index + 1].title : "Вы достигли последнего материала раздела";
+}
+
+function updateReadingProgress() {
+  const main = document.getElementById("main");
+  const bar = document.getElementById("reader-progress-bar");
+  const top = document.getElementById("btn-reader-top");
+  if (!main || !bar || !top) return;
+  const innerScroll = main.scrollHeight > main.clientHeight + 1;
+  const scrollTop = innerScroll ? main.scrollTop : window.scrollY;
+  const range = innerScroll ? main.scrollHeight - main.clientHeight : document.documentElement.scrollHeight - window.innerHeight;
+  const progress = range > 0 ? Math.min(100, Math.round((scrollTop / range) * 100)) : 0;
+  bar.style.width = `${progress}%`;
+  top.classList.toggle("hidden", scrollTop < 360);
 }
 
 function goHome() {
@@ -263,6 +280,18 @@ function isVisibleDoc(d) {
   return true;
 }
 
+function docKind(docOrModule) {
+  const module = typeof docOrModule === "string" ? docOrModule : docOrModule?.module;
+  if (module === "База знаний") return "kb";
+  if (module === "Книга решений") return "strategy";
+  return "course";
+}
+
+function docKindLabel(doc) {
+  const kind = docKind(doc);
+  return kind === "kb" ? "База знаний" : kind === "strategy" ? "Стратегия" : "Урок курса";
+}
+
 function renderCards() {
   const others = course.docs.filter(isVisibleDoc);
   const cheatGrid = document.getElementById("cheat-grid");
@@ -291,7 +320,10 @@ function renderCards() {
       return (
         '<div class="acc" data-mod="' +
         esc(mod) +
-        '"><button type="button" class="acc-head" aria-expanded="false"><span class="acc-title">' +
+        '" data-kind="' +
+        docKind(mod) +
+        '">' +
+        '<button type="button" class="acc-head" aria-expanded="false"><span class="acc-title">' +
         esc(mod) +
         '</span><span class="acc-count">' +
         docs.length +
@@ -346,6 +378,8 @@ function esc(s) {
 
 function renderResults(docs, containerId) {
   const el = document.getElementById(containerId);
+  const count = document.getElementById("search-count");
+  if (count && containerId === "search-results") count.textContent = docs.length ? `· ${docs.length}` : "";
   if (!docs.length) {
     el.innerHTML =
       '<p style="padding:12px;color:var(--text-muted)">Ничего не найдено. Попробуйте «ФЗ-53», «мобилизация», «категория».</p>';
@@ -356,12 +390,16 @@ function renderResults(docs, containerId) {
       (d) =>
         '<button type="button" class="result-item" data-id="' +
         esc(d.id) +
-        '"><div class="result-mod">' +
+        '"><div class="result-type result-type-' +
+        docKind(d) +
+        '">' +
+        esc(docKindLabel(d)) +
+        '</div><div class="result-mod">' +
         esc(d.module) +
         '</div><div class="result-title">' +
         esc(d.title) +
         '</div><div class="result-snippet">' +
-        esc((d.goal || d.text || "").slice(0, 120)) +
+        esc((d.goal || d.text || "").slice(0, 160)) +
         "…</div></button>"
     )
     .join("");
@@ -376,6 +414,7 @@ function closeSidebar() {
   document.getElementById("overlay").classList.remove("show");
 }
 function openSearchModal() {
+  searchTrigger = document.activeElement;
   document.getElementById("search-modal").classList.remove("hidden");
   const input = document.getElementById("modal-search");
   input.value = "";
@@ -384,6 +423,8 @@ function openSearchModal() {
 }
 function closeSearchModal() {
   document.getElementById("search-modal").classList.add("hidden");
+  if (searchTrigger && typeof searchTrigger.focus === "function") searchTrigger.focus();
+  searchTrigger = null;
 }
 
 document.addEventListener("click", (e) => {
@@ -447,6 +488,13 @@ document.getElementById("reader-module").addEventListener("click", () => {
   const module = document.getElementById("reader-module").dataset.module;
   if (module) goModule(module);
 });
+document.getElementById("main").addEventListener("scroll", updateReadingProgress, { passive: true });
+window.addEventListener("scroll", updateReadingProgress, { passive: true });
+document.getElementById("btn-reader-top").addEventListener("click", () => {
+  const main = document.getElementById("main");
+  if (main.scrollHeight > main.clientHeight + 1) main.scrollTo({ top: 0, behavior: "smooth" });
+  else window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
 document.getElementById("btn-font-up").addEventListener("click", () => {
   readerSize = Math.min(1.4, readerSize + 0.08);
@@ -498,6 +546,7 @@ document.getElementById("quick-chips").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-q]");
   if (!btn) return;
   const q = btn.dataset.q;
+  activeSearchQuery = q;
   const results = search(q);
   if (results.length === 1) openDoc(results[0].id);
   else if (results.length > 1) {
@@ -513,6 +562,7 @@ document.getElementById("quick-chips").addEventListener("click", (e) => {
 
 document.getElementById("home-search").addEventListener("input", (e) => {
   const q = e.target.value.trim();
+  activeSearchQuery = q;
   if (q.length < 2) return;
   clearTimeout(window._hs);
   window._hs = setTimeout(() => {
@@ -525,6 +575,7 @@ document.getElementById("home-search").addEventListener("input", (e) => {
 document.getElementById("home-search").addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     const q = e.target.value.trim();
+    activeSearchQuery = q;
     const results = search(q);
     if (results.length === 1) openDoc(results[0].id);
     else {
@@ -536,6 +587,7 @@ document.getElementById("home-search").addEventListener("keydown", (e) => {
 
 document.getElementById("modal-search").addEventListener("input", (e) => {
   const q = e.target.value.trim();
+  activeSearchQuery = q;
   clearTimeout(window._ms);
   window._ms = setTimeout(() => renderResults(search(q), "modal-results"), 150);
 });

@@ -15,9 +15,9 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="icon-192.svg" />
-  <link rel="stylesheet" href="css/styles.css?v=14" />
-  <link rel="stylesheet" href="css/v8.css?v=14" />
-  <link rel="stylesheet" href="css/pwa.css?v=14" />
+  <link rel="stylesheet" href="css/styles.css?v=15" />
+  <link rel="stylesheet" href="css/v8.css?v=15" />
+  <link rel="stylesheet" href="css/pwa.css?v=15" />
   <script>
     try {
       if (!localStorage.getItem("vp-theme-v2")) {
@@ -115,6 +115,7 @@
       </section>
 
       <section class="view view-reader hidden" id="view-reader">
+        <div class="reader-progress" aria-hidden="true"><span id="reader-progress-bar"></span></div>
         <div class="reader-toolbar">
           <button type="button" class="text-btn" id="btn-prev">← Назад</button>
           <div class="font-btns">
@@ -130,10 +131,11 @@
         <h2 class="reader-title" id="reader-title"></h2>
         <p class="reader-goal" id="reader-goal"></p>
         <article class="reader-body" id="reader-body"></article>
+        <button type="button" class="to-top hidden" id="btn-reader-top">↑ К началу урока</button>
       </section>
 
       <section class="view view-search hidden" id="view-search">
-        <h2 class="section-title">Результаты поиска</h2>
+        <h2 class="section-title">Результаты поиска <span class="search-count" id="search-count"></span></h2>
         <div id="search-results"></div>
       </section>
     </main>
@@ -159,15 +161,16 @@
   </div>
 
   <div class="modal hidden" id="search-modal">
-    <div class="modal-panel">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="search-dialog-title">
       <div class="modal-head">
+        <span class="sr-only" id="search-dialog-title">Поиск по курсу</span>
         <input type="search" id="modal-search" placeholder="Поиск по курсу…" autocomplete="off" />
-        <button type="button" class="icon-btn" id="btn-close-search">×</button>
+        <button type="button" class="icon-btn" id="btn-close-search" aria-label="Закрыть поиск">×</button>
       </div>
       <div id="modal-results"></div>
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=14"></script>
+  <script type="module" src="js/app.js?v=15"></script>
 </body>
 </html>
