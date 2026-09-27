@@ -15,9 +15,9 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="icon-192.svg" />
-  <link rel="stylesheet" href="css/styles.css?v=20" />
-  <link rel="stylesheet" href="css/v8.css?v=20" />
-  <link rel="stylesheet" href="css/pwa.css?v=20" />
+  <link rel="stylesheet" href="css/styles.css?v=21" />
+  <link rel="stylesheet" href="css/v8.css?v=21" />
+  <link rel="stylesheet" href="css/pwa.css?v=21" />
   <script>
     try {
       if (!localStorage.getItem("vp-theme-v2")) {
@@ -101,6 +101,15 @@
           <button type="button" class="chip" data-q="выплаты">Выплаты</button>
           <button type="button" class="chip" data-q="увольнение">Увольнение</button>
         </div>
+
+        <section class="full-course-card" aria-labelledby="full-course-title">
+          <div>
+            <div class="continue-kicker">Офлайн-доступ</div>
+            <h3 id="full-course-title">Весь курс одним PDF</h3>
+            <p>Все модули, база знаний и стратегии в одном файле — 159 страниц.</p>
+          </div>
+          <a class="btn" href="pdf/voennoe-pravo-polnyj-kurs.pdf" download>Скачать весь курс</a>
+        </section>
 
         <section class="continue-card hidden" id="continue-card" aria-labelledby="continue-title">
           <div class="continue-kicker">Ваш прогресс</div>

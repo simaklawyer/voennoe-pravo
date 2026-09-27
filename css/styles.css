@@ -120,6 +120,15 @@ body {
 .continue-card h3 { margin: 2px 0 4px; font-size: 1rem; }
 .continue-kicker { color: var(--accent); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .continue-card p { margin: 0 0 10px; color: var(--text-muted); font-size: .84rem; line-height: 1.4; }
+.full-course-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  border: 1px solid var(--accent-soft); border-left: 4px solid var(--accent);
+  border-radius: var(--radius); background: var(--bg-elev); padding: 14px 16px;
+  margin: 0 0 18px; box-shadow: var(--shadow);
+}
+.full-course-card h3 { margin: 2px 0 4px; font-size: 1rem; }
+.full-course-card p { margin: 0; color: var(--text-muted); font-size: .84rem; line-height: 1.4; }
+.full-course-card .btn { flex: 0 0 auto; white-space: nowrap; text-decoration: none; }
 .section-title { margin: 8px 0 10px; font-size: .95rem; font-weight: 700; }
 .search-count { color: var(--text-muted); font-size: .8em; font-weight: 500; }
 .card-grid { display: grid; gap: 10px; }
@@ -306,6 +315,8 @@ body {
   padding: 10px 12px; font-size: .9rem; color: var(--text-muted); margin-bottom: 1rem;
 }
 @media (max-width: 600px) {
+  .full-course-card { align-items: flex-start; flex-direction: column; }
+  .full-course-card .btn { width: 100%; text-align: center; }
   .reader-body { font-size: var(--reader-size, 1rem); line-height: 1.58; }
   .reader-body .rb-h { font-size: 1.04em; margin-top: 1.25rem; padding: .55rem .65rem; }
   .reader-body .rb-sub { font-size: .9em; margin-top: .9rem; }
