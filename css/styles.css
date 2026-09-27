@@ -156,7 +156,7 @@ body {
 .toc-level-4 { padding-left: 14px; font-size: .8rem; }
 .reader-body {
   font-family: var(--font-serif); font-size: var(--reader-size, 1.02rem);
-  line-height: 1.55; max-width: 68ch;
+  line-height: 1.62; max-width: 68ch;
 }
 .to-top { display: block; margin: 28px auto 0; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-elev); color: var(--link); padding: 8px 14px; font: inherit; cursor: pointer; }
 .to-top:hover { background: var(--bg-soft); }
@@ -269,15 +269,21 @@ body {
 .nav-acc-head span { color: var(--text-muted); font-weight: 500; font-size: .75rem; }
 .nav-acc-body { display: none; padding-left: 6px; }
 .nav-acc.open .nav-acc-body { display: block; }
-.reader-body p { margin: 0 0 .55rem; }
+.reader-body p { margin: 0 0 .85rem; text-wrap: pretty; }
 .reader-body .rb-h {
-  font-family: var(--font-sans); font-size: 1.05em; font-weight: 700;
-  margin: 1rem 0 .35rem; line-height: 1.3;
+  font-family: var(--font-sans); font-size: 1.12em; font-weight: 800;
+  margin: 1.55rem 0 .55rem; padding: .65rem .75rem .6rem;
+  line-height: 1.28; color: var(--text); border-left: 4px solid var(--accent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 80%);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 .reader-body .rb-sub {
   font-family: var(--font-sans); font-size: .95em; font-weight: 650;
-  margin: .75rem 0 .25rem; color: var(--text-muted);
+  margin: 1.1rem 0 .35rem; color: var(--accent); letter-spacing: .01em;
+  padding-bottom: .25rem; border-bottom: 1px solid var(--border);
 }
+.reader-body .rb-label { font-family: var(--font-sans); font-weight: 800; color: var(--accent); }
+.reader-body em { color: var(--accent); }
 .reader-body .callout { margin: .9rem 0; padding: .75rem .9rem; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); background: var(--bg-soft); font-family: var(--font-sans); }
 .reader-body .callout strong { display: block; margin-bottom: .2rem; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
 .reader-body .callout p { margin: 0; font-size: .92em; line-height: 1.45; }
@@ -287,9 +293,19 @@ body {
 .reader-body .callout-documents strong { color: #075985; }
 .reader-body .callout-risk { border-left-color: #dc2626; background: #fef2f2; }
 .reader-body .callout-risk strong { color: #991b1b; }
-.reader-body ul, .reader-body ol { margin: 0 0 .7rem; padding-left: 1.2rem; }
-.reader-body li { margin: .15rem 0; line-height: 1.45; }
+.reader-body ul, .reader-body ol { margin: .25rem 0 1rem; padding: .55rem .8rem .55rem 1.8rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--bg-soft) 65%, transparent); }
+.reader-body li { margin: .35rem 0; line-height: 1.5; padding-left: .15rem; }
+.reader-body li::marker { color: var(--accent); font-weight: 700; }
+.reader-body hr { border: 0; border-top: 1px solid var(--border); margin: 1.2rem 0; }
+.reader-body p:first-child { font-size: 1.04em; }
+#reader-body { overflow-wrap: anywhere; }
 #reader-goal {
   background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 10px 12px; font-size: .9rem; color: var(--text-muted); margin-bottom: 1rem;
+}
+@media (max-width: 600px) {
+  .reader-body { font-size: var(--reader-size, 1rem); line-height: 1.58; }
+  .reader-body .rb-h { font-size: 1.04em; margin-top: 1.25rem; padding: .55rem .65rem; }
+  .reader-body .rb-sub { font-size: .9em; margin-top: .9rem; }
+  .reader-body ul, .reader-body ol { padding-left: 1.55rem; }
 }

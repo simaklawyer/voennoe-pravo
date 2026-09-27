@@ -112,9 +112,28 @@ function showView(name) {
   });
 }
 
+function inlineMarkup(value) {
+  let html = esc(value);
+  const labels = "Цель урока|Цель|Признаки|Контрольный вопрос|Действие|Логика|Результат|Выходной результат|Правовая опора|Правило|Тактика|Ситуация|Основание жалобы|Результат|Важно|Внимание|Ошибка|Совет|Пояснение";
+  html = html.replace(new RegExp(`(^|[^А-Яа-яЁё])(${labels}):`, "giu"), "$1<strong class=\"rb-label\">$2:</strong>");
+  html = html.replace(/(«[^»]{2,}»)/g, "<em>$1</em>");
+  return html;
+}
+
+function prepareBodyLines(text) {
+  // The PDF-derived source intentionally remains untouched. These boundaries are
+  // presentation-only: they turn inline section labels into readable blocks.
+  let prepared = text.replace(/\r\n/g, "\n");
+  prepared = prepared.replace(/[ \t]*\n[ \t]*/g, " ");
+  prepared = prepared.replace(/\s+(?=(?:ЧАСТЬ\s+\d+\.|СТАДИЯ\s+\d+\.|ШАГ\s+\d+\.?|СТРАТЕГИЯ\s*№\s*\d+|Урок\s+\d+\.|ВАРИАНТ\s+\d+\.|ОТВЕТЫ\s+НА\s+ТИПОВЫЕ|Кратко\s+по\s+теме|Контрольные\s+точки|Условия\s+завершения|Правовая\s+опора|Набор\s+доказательств|Типовые\s+возражения|Нормативная\s+база|Пошаговый\s+маршрут|Встроенные\s+развилки|ОБРАЗЕЦ|ЖАЛОБА|ХОДАТАЙСТВО|Пояснение|Фатальные\s+ошибки|Основные\s+риски|Практический\s+пример|ИНСТРУКЦИЯ:))/giu, "\n\n");
+  prepared = prepared.replace(/\s+(?=[●•❌⚠️]\s+)/g, "\n");
+  prepared = prepared.replace(/\s+(?=(?:Признаки|Контрольный вопрос|Действие|Логика|Результат|Выходной результат|Правовая опора|Правило|Тактика|Ситуация|Основание жалобы|Важно|Внимание|Ошибка|Совет):)/giu, "\n");
+  return prepared.split("\n");
+}
+
 function formatBody(text) {
   if (!text) return "";
-  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const lines = prepareBodyLines(text);
   const out = [];
   const toc = [];
   let headingIndex = 0;
@@ -123,14 +142,14 @@ function formatBody(text) {
   function flushList() {
     if (!listBuf.length) return;
     const tag = listType === "ol" ? "ol" : "ul";
-    out.push("<" + tag + ">" + listBuf.map((x) => "<li>" + esc(x) + "</li>").join("") + "</" + tag + ">");
+    out.push("<" + tag + ">" + listBuf.map((x) => "<li>" + inlineMarkup(x) + "</li>").join("") + "</" + tag + ">");
     listBuf = [];
     listType = null;
   }
   function pushHeading(tag, className, label) {
     const id = `reader-heading-${headingIndex++}`;
     toc.push({ id, label, level: tag === "h4" ? 4 : 3 });
-    out.push(`<${tag} id="${id}" class="${className}">${esc(label)}</${tag}>`);
+      out.push(`<${tag} id="${id}" class="${className}">${inlineMarkup(label)}</${tag}>`);
   }
   for (let raw of lines) {
     const line = raw.trim();
@@ -142,7 +161,7 @@ function formatBody(text) {
       flushList();
       const kind = resolvedCallout[1].toLowerCase();
       const cls = kind.startsWith("важ") ? "important" : kind === "документы" ? "documents" : "risk";
-      out.push(`<aside class="callout callout-${cls}"><strong>${esc(resolvedCallout[1])}</strong><p>${esc(resolvedCallout[2])}</p></aside>`);
+      out.push(`<aside class="callout callout-${cls}"><strong>${inlineMarkup(resolvedCallout[1])}</strong><p>${inlineMarkup(resolvedCallout[2])}</p></aside>`);
       continue;
     }
     if (/^(цель урока|цель:|для каких дел|входные данные|пошаговый маршрут|развилки|связка)/i.test(line)) {
@@ -155,7 +174,7 @@ function formatBody(text) {
       pushHeading("h3", "rb-h", line);
       continue;
     }
-    if (/^(шаг\s+\d+|стратегия\s*№?\s*\d+)/i.test(line) && line.length < 120) {
+    if (/^(часть\s+\d+|стадия\s+\d+|шаг\s+\d+|стратегия\s*№?\s*\d+)/i.test(line) && line.length < 160) {
       flushList();
       pushHeading("h3", "rb-h", line);
       continue;
@@ -174,11 +193,11 @@ function formatBody(text) {
     if (line.includes(";") && line.length < 400 && (line.match(/;/g) || []).length >= 2) {
       flushList();
       const parts = line.split(";").map((p) => p.trim()).filter(Boolean);
-      out.push("<ul>" + parts.map((p) => "<li>" + esc(p.replace(/\.$/, "")) + "</li>").join("") + "</ul>");
+      out.push("<ul>" + parts.map((p) => "<li>" + inlineMarkup(p.replace(/\.$/, "")) + "</li>").join("") + "</ul>");
       continue;
     }
     flushList();
-    out.push("<p>" + esc(line) + "</p>");
+    out.push("<p>" + inlineMarkup(line) + "</p>");
   }
   flushList();
   return { html: out.join("\n"), toc };
