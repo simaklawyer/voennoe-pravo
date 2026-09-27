@@ -144,6 +144,8 @@ body {
 .text-btn:disabled, .icon-btn:disabled { opacity: .45; cursor: default; }
 .font-btns { display: flex; gap: 4px; }
 .reader-context { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+.reader-pdf { color: var(--accent); border: 1px solid var(--border); border-radius: 999px; padding: 4px 8px; text-decoration: none; font-size: .72rem; font-weight: 700; margin-left: auto; }
+.reader-pdf:hover, .reader-pdf:focus-visible { background: var(--bg-soft); text-decoration: none; }
 .reader-module { border: none; background: transparent; color: var(--link); padding: 0; font: inherit; font-size: .75rem; cursor: pointer; text-align: left; }
 .reader-module:hover { text-decoration: underline; }
 .reader-position { color: var(--text-muted); font-size: .72rem; white-space: nowrap; }

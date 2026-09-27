@@ -230,6 +230,12 @@ function openDoc(id) {
   document.getElementById("reader-position").textContent =
     docIndex >= 0 ? `${docIndex + 1} из ${moduleDocs.length}` : "";
   document.getElementById("reader-title").textContent = doc.title;
+  const pdfLink = document.getElementById("btn-download-pdf");
+  if (pdfLink) {
+    pdfLink.href = `pdf/lessons/${encodeURIComponent(doc.id)}.pdf`;
+    pdfLink.download = `${doc.id}.pdf`;
+    pdfLink.title = `Скачать «${doc.title}» в PDF`;
+  }
   const goalEl = document.getElementById("reader-goal");
   if (doc.goal) { goalEl.textContent = doc.goal; goalEl.style.display = ""; }
   else goalEl.style.display = "none";
